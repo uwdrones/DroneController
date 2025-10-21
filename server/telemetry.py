@@ -2,11 +2,14 @@
 """
 Telemetry streaming module for drone status data.
 Handles JSON formatting and streaming to WebSocket clients.
+Processes MAVSDK telemetry data and formats for real-time streaming.
 """
 
 import asyncio
 import json
 import logging
+import random
+import time
 from typing import Dict, Any
 from datetime import datetime
 from mav_interface import MAVInterface, DroneStatus
@@ -32,7 +35,7 @@ class TelemetryStreamer:
         logger.info(f"Removed telemetry client. Total clients: {len(self.clients)}")
     
     def format_telemetry_data(self, status: DroneStatus) -> Dict[str, Any]:
-        """Format drone status into JSON-serializable dictionary."""
+        """Format drone status into enriched JSON-serializable dictionary."""
         return {
             "timestamp": datetime.utcnow().isoformat() + "Z",
             "armed": status.armed,
@@ -58,27 +61,28 @@ class TelemetryStreamer:
             "connection": {
                 "connected": self.mav_interface.is_connected(),
                 "status": "connected" if self.mav_interface.is_connected() else "disconnected"
-            }
+            },
+            "source": "mavsdk_telemetry"
         }
     
     async def telemetry_stream(self, websocket):
-        """Stream telemetry data to a specific WebSocket client."""
+        """Stream enriched telemetry data to a specific WebSocket client."""
         self.add_client(websocket)
         
         try:
             while self.mav_interface.is_connected():
                 try:
-                    # Get current drone status
+                    # Get current drone status via MAVSDK
                     status = await self.mav_interface.get_status()
                     
-                    # Format as JSON
+                    # Format as enriched JSON
                     telemetry_data = self.format_telemetry_data(status)
                     json_data = json.dumps(telemetry_data, separators=(',', ':'))
                     
                     # Send to client
                     await websocket.send(json_data)
                     
-                    # Wait before next update
+                    # Wait before next update (1 second interval)
                     await asyncio.sleep(1.0)
                     
                 except Exception as e:
@@ -96,7 +100,7 @@ class TelemetryStreamer:
             return
         
         try:
-            # Get current drone status
+            # Get current drone status via MAVSDK
             status = await self.mav_interface.get_status()
             telemetry_data = self.format_telemetry_data(status)
             json_data = json.dumps(telemetry_data, separators=(',', ':'))
@@ -119,4 +123,40 @@ class TelemetryStreamer:
     
     def get_client_count(self) -> int:
         """Get the number of connected clients."""
-        return len(self.clients) 
+        return len(self.clients)
+
+async def poll_telemetry(router):
+    """Simulate periodic telemetry polling and broadcast via router."""
+    logger.info("[ROUTER] Starting telemetry polling...")
+    
+    while True:
+        try:
+            # Generate mock telemetry data
+            telemetry_data = {
+                "battery": round(random.uniform(85.0, 100.0), 1),
+                "altitude": round(random.uniform(0.0, 50.0), 1),
+                "velocity": round(random.uniform(0.0, 15.0), 1),
+                "armed": random.choice([True, False]),
+                "flight_mode": random.choice(["STABILIZED", "AUTO", "MANUAL"]),
+                "gps_lat": round(random.uniform(37.7, 37.8), 6),
+                "gps_lon": round(random.uniform(-122.5, -122.4), 6),
+                "heading": round(random.uniform(0.0, 360.0), 1)
+            }
+            
+            # Create telemetry message
+            telemetry_message = {
+                "type": "telemetry",
+                "data": telemetry_data,
+                "timestamp": time.time()
+            }
+            
+            # Broadcast via router
+            print(f"[ROUTER] Broadcasting telemetry: {json.dumps(telemetry_message, indent=2)}")
+            await router.route(telemetry_message)
+            
+            # Wait 1 second before next poll
+            await asyncio.sleep(1.0)
+            
+        except Exception as e:
+            logger.error(f"[ROUTER] Error in telemetry polling: {e}")
+            await asyncio.sleep(1.0) 
