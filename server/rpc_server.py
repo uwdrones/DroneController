@@ -2,20 +2,23 @@
 """
 gRPC server for drone control commands.
 Currently contains stub implementation that will be replaced with actual gRPC.
+Runs on port 50051 for command interface.
 """
 
 import asyncio
 import logging
 from typing import Optional
 from mav_interface import MAVInterface
+from router import Router
 
 logger = logging.getLogger(__name__)
 
 class RPCServer:
     """gRPC server for drone control commands."""
     
-    def __init__(self, mav_interface: MAVInterface, host: str = "0.0.0.0", port: int = 50051):
+    def __init__(self, mav_interface: MAVInterface, router: Router, host: str = "0.0.0.0", port: int = 50051):
         self.mav_interface = mav_interface
+        self.router = router
         self.host = host
         self.port = port
         self.running = False
@@ -61,6 +64,13 @@ class RPCServer:
     def is_running(self) -> bool:
         """Check if the gRPC server is running."""
         return self.running
+    
+    async def send_command(self, message_dict: dict) -> dict:
+        """Send a command message through the router (stub implementation)."""
+        logger.info(f"[ROUTER] gRPC received command: {message_dict}")
+        response = await self.router.route(message_dict)
+        logger.info(f"[ROUTER] gRPC sending response: {response}")
+        return response
 
 # TODO: Implement actual gRPC service
 # class DroneServiceServicer(drone_pb2_grpc.DroneServiceServicer):
