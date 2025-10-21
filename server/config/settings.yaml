@@ -1,0 +1,38 @@
+# DroneController Server Configuration
+
+# Network Configuration
+network:
+  websocket:
+    host: "0.0.0.0"
+    port: 8765
+  grpc:
+    host: "0.0.0.0"
+    port: 50051
+  mavlink:
+    port: 14540
+    address: "udp://:14540"
+
+# Telemetry Configuration
+telemetry:
+  update_interval: 1.0  # seconds
+  mock_mode: true
+  mock_data:
+    battery_level: 85.5
+    gps_lat: 37.7749
+    gps_lon: -122.4194
+    altitude: 0.0
+    heading: 0.0
+    ground_speed: 0.0
+    flight_mode: "STABILIZED"
+    armed: false
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+# Server Configuration
+server:
+  shutdown_timeout: 5  # seconds
+  max_clients: 10
+  connection_timeout: 30  # seconds
