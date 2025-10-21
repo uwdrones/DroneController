@@ -2,6 +2,7 @@
 """
 Main supervisor script for the drone control server.
 Runs MAVSDK connection, gRPC server, and WebSocket server concurrently.
+Uses ports: WebSocket 8765, gRPC 50051, MAVLink 14540.
 """
 
 import asyncio
@@ -14,6 +15,8 @@ from typing import Optional
 from mav_interface import MAVInterface
 from rpc_server import RPCServer
 from ws_server import WebSocketServer
+from router import Router
+from handlers import register_all
 
 # Configure logging
 logging.basicConfig(
@@ -27,6 +30,7 @@ class DroneServer:
         self.mav_interface: Optional[MAVInterface] = None
         self.rpc_server: Optional[RPCServer] = None
         self.ws_server: Optional[WebSocketServer] = None
+        self.router: Optional[Router] = None
         self.running = False
         
     async def start(self):
@@ -36,8 +40,10 @@ class DroneServer:
         try:
             # Initialize components
             self.mav_interface = MAVInterface()
-            self.rpc_server = RPCServer(self.mav_interface)
-            self.ws_server = WebSocketServer(self.mav_interface)
+            self.router = Router()
+            register_all(self.router)
+            self.rpc_server = RPCServer(self.mav_interface, self.router)
+            self.ws_server = WebSocketServer(self.mav_interface, self.router)
             
             # Start all services concurrently
             await asyncio.gather(
@@ -65,6 +71,28 @@ class DroneServer:
         
         logger.info("Server shutdown complete.")
 
+async def test_router():
+    """Test the router system locally."""
+    logger.info("Testing router system...")
+    router = Router()
+    register_all(router)
+    
+    # Example: Simulate a command message
+    msg = {"action": "STATUS", "params": {}}
+    resp = await router.route(msg)
+    print(f"[INFO] Router test result: {resp}")
+    
+    # Test other commands
+    test_commands = [
+        {"action": "ARM", "params": {}},
+        {"action": "DISARM", "params": {}},
+        {"action": "SET_MODE", "params": {"mode": "AUTO"}}
+    ]
+    
+    for cmd in test_commands:
+        result = await router.route(cmd)
+        print(f"[INFO] Command {cmd['action']}: {result}")
+
 async def main():
     """Main entry point."""
     server = DroneServer()
@@ -86,4 +114,10 @@ async def main():
         await server.shutdown()
 
 if __name__ == "__main__":
-    asyncio.run(main()) 
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1] == "test":
+        # Run router test
+        asyncio.run(test_router())
+    else:
+        # Run full server
+        asyncio.run(main()) 
