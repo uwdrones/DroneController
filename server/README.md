@@ -2,7 +2,7 @@
 
 Python-based onboard server for drone control, running on Raspberry Pi with Pixhawk flight controller.
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 Ground Station (Go client)
@@ -14,7 +14,7 @@ Flight Controller (Pixhawk)
     ⇨ ESCs + motors (actual drone motion)
 ```
 
-## 📁 Module Structure
+## Module Structure
 
 - **`main.py`** - Supervisor script that runs all services concurrently
 - **`mav_interface.py`** - MAVSDK wrapper for flight controller communication
@@ -23,7 +23,7 @@ Flight Controller (Pixhawk)
 - **`rpc_server.py`** - gRPC server for command interface (stub implementation)
 - **`scripts/`** - Test scripts for individual components
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Install Dependencies
 
@@ -52,22 +52,22 @@ python scripts/test_arm.py
 python scripts/test_ws.py
 ```
 
-## 🔧 Development Status
+## Development Status
 
-### ✅ Implemented (Stub)
+### Implemented (Stub)
 - **MAV Interface**: Mock arm/disarm/get_status functions
 - **WebSocket Server**: Real telemetry streaming on port 8765
 - **Telemetry**: JSON formatting and client management
 - **Main Supervisor**: Concurrent service management
 
-### 🚧 TODO (Real Implementation)
+### TODO (Real Implementation)
 - **MAVSDK Integration**: Replace stubs with actual MAVSDK calls
 - **gRPC Server**: Implement actual gRPC service with protobuf
 - **Protocol Buffers**: Define drone.proto and generate Python code
 - **Error Handling**: Robust error handling and recovery
 - **Configuration**: Environment-based configuration
 
-## 📡 Communication Interfaces
+## Communication Interfaces
 
 ### WebSocket Telemetry (Port 8765)
 Real-time JSON telemetry stream:
@@ -96,7 +96,7 @@ Command interface (stub):
 - `SetMode(mode)` - Set flight mode
 - `GetStatus()` - Get current status
 
-## 🧪 Testing
+## Testing
 
 The server includes comprehensive test scripts:
 
@@ -105,7 +105,7 @@ The server includes comprehensive test scripts:
 
 Run tests to verify components work before integration.
 
-## 🔄 Next Steps
+## Next Steps
 
 1. **MAVSDK Integration**: Replace mock functions with real MAVSDK calls
 2. **gRPC Implementation**: Create protobuf definitions and implement gRPC service
@@ -113,7 +113,7 @@ Run tests to verify components work before integration.
 4. **Error Recovery**: Add robust error handling and recovery mechanisms
 5. **Configuration**: Add environment-based configuration system
 
-## 📝 Notes
+## Notes
 
 - Currently uses mock/stub implementations for rapid prototyping
 - WebSocket telemetry is fully functional with mock data
